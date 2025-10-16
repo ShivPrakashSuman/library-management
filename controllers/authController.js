@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import {Op} from "sequelize";
 
 // Generate JWT
 const generateToken = (id, role) =>
@@ -10,15 +11,15 @@ const generateToken = (id, role) =>
 export const registerUser = async (req, res) => {
    try {
       const { name, email, mobile, password, role } = req.body;
-
+      
       if (!email || !mobile || !password || !name)
          return res.status(400).json({ message: "All fields required" });
-
+      
       const existingUser = await User.findOne({
-         where: { [User.sequelize.Op.or]: [{ email }, { mobile }] },
-      });
-
-      if (existingUser)
+            where: { [Op.or]: [{ email }, { mobile }] }
+         });
+         
+      if (existingUser) 
          return res.status(400).json({ message: "Email or mobile already registered" });
 
       const user = await User.create({ name, email, mobile, password, role });
