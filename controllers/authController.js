@@ -1,78 +1,86 @@
 import User from "../models/User.js";
-import jwt from "jsonwebtoken";
+import generateToken from "../utils/generateToken.js";
 import bcrypt from "bcryptjs";
-import {Op} from "sequelize";
-
-// Generate JWT
-const generateToken = (id, role) =>
-   jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: "30d" });
+import { Op } from "sequelize";
+import Joi from "joi";
 
 // -------------------- REGISTER --------------------
-export const registerUser = async (req, res) => {
+const registerUser = async (req, res) => {
+   let resp = { status: false, message: 'Oops Somethimg went wrong', data: null };
+   const schema = Joi.object({
+      name: Joi.string().required(),
+      email: Joi.string().trim().email().required(),
+      password: Joi.string().min(4).max(8).required(),
+      confirmpassword: Joi.ref('password'),
+      mobile: Joi.string().required(),
+      role: Joi.string().required(),
+   }).validate(req.body);
+   if (schema.error) {
+      resp.message = schema.error.details[0].message;
+      return res.json(resp);
+   }
    try {
-      const { name, email, mobile, password, role } = req.body;
-      
-      if (!email || !mobile || !password || !name)
-         return res.status(400).json({ message: "All fields required" });
-      
+      const { name, email, mobile, password, role } = schema.value;
       const existingUser = await User.findOne({
-            where: { [Op.or]: [{ email }, { mobile }] }
-         });
-         
-      if (existingUser) 
-         return res.status(400).json({ message: "Email or mobile already registered" });
-
-      const user = await User.create({ name, email, mobile, password, role });
-
-      const token = generateToken(user.id, user.role);
-      res.status(201).json({
-         id: user.id,
-         name: user.name,
-         email: user.email,
-         mobile: user.mobile,
-         role: user.role,
-         token,
+         where: { [Op.or]: [{ email }, { mobile }] }
       });
-   } catch (error) {
-      res.status(500).json({ message: error.message });
+      if (existingUser) {
+         resp.message = 'Email or mobile already registered';
+         return res.json(resp);
+      }
+
+      const result = await User.create({ name, email, mobile, password, role });
+      if (result) {
+         resp.status = true;
+         resp.message = 'Registered Successfully';
+         resp.data = result;
+      } else {
+         resp.message = 'Not Record Registered';
+      }
+      return res.json(resp);
+   } catch (e) {
+      console.log('catch error', e);
+      return res.json(resp);
    }
 };
 
 // -------------------- LOGIN --------------------
-export const loginUser = async (req, res) => {
+const loginUser = async (req, res) => {
+   let resp = { status: false, message: 'Oops Somethimg went wrong', data: null };
+   const schema = Joi.object({
+      email: Joi.string().trim().email(),
+      mobile: Joi.string(),
+      password: Joi.string().min(4).max(8).required(),
+   }).validate(req.body);
+   if (schema.error) {
+      resp.message = schema.error.details[0].message;
+      return res.json(resp);
+   }
    try {
-      const { emailOrMobile, password } = req.body;
+      const { email, mobile, password } = schema.value;
 
-      if (!emailOrMobile || !password)
-         return res.status(400).json({ message: "Please enter credentials" });
+      // find user by email or mobile
+      const whereCondition = email ? { email: email.trim() } : { mobile: mobile.trim() };
+      const userData = await User.findOne({ where: whereCondition });
 
-      // find by either email or mobile
-      const user = await User.findOne({
-         where: {
-            [User.sequelize.Op.or]: [
-               { email: emailOrMobile },
-               { mobile: emailOrMobile },
-            ],
-         },
-      });
+      if (!userData) {
+         resp.message = 'User not found';
+         return res.json(resp);
+      }
 
-      if (!user)
-         return res.status(401).json({ message: "User not found" });
-
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch)
-         return res.status(401).json({ message: "Invalid password" });
-
-      const token = generateToken(user.id, user.role);
-      res.json({
-         id: user.id,
-         name: user.name,
-         email: user.email,
-         mobile: user.mobile,
-         role: user.role,
-         token,
-      });
+      const isMatch = await bcrypt.compare(password, userData.password);
+      const token = generateToken(userData.id, userData.role);
+      if (isMatch) {
+         resp.status = true;
+         resp.message = 'Login SuccessFull';
+         resp.data = { user: userData, token: token };
+      } else {
+         resp.message = 'Invalid password';
+      }
+      return res.json(resp);
    } catch (error) {
       res.status(500).json({ message: error.message });
    }
 };
+
+export { registerUser, loginUser };
