@@ -1,8 +1,11 @@
 import express from "express";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
+import { toNodeHandler } from "better-auth/node";
 import authRoutes from "./routes/authRoutes.js";
 import bookRoutes from "./routes/bookRoutes.js";
+
+import { auth } from "./controllers/auth.js";
 // import userRoutes from "./routes/userRoutes.js";
 import cors from "cors";
 
@@ -14,8 +17,9 @@ app.use(express.json());
 app.use(cors());
 
 // Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/books", bookRoutes);
+app.all("/api/auth/", toNodeHandler(auth)); 
+// app.use("/api/auth", authRoutes);
+// app.use("/api/books", bookRoutes);
 // app.use("/api/users", userRoutes);  
 
 const PORT = process.env.PORT || 5000;
