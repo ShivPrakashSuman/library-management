@@ -1,11 +1,12 @@
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
-import authRoutes from './routes/authRoutes.js'
-import { connectDB } from "./lib/db.js";
+import { connectDB } from "./config/db.js";
+import authRoutes from './routes/authRoutes.js';
+import bookRoutes from './routes/bookRoutes.js';
 
 const app = express();
-const port = 3005;
+const port = 3000;
 
 app.use(express.json());
 await connectDB();
@@ -19,6 +20,7 @@ app.use(
 
 // Mount routes
 app.use("/api/auth", authRoutes);
+app.use("/book", bookRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
