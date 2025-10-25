@@ -8,15 +8,15 @@ const get = async (req, res) => {
 
     if (transactionId) {
       transactions = await TransactionModel.findById(transactionId)
-        .populate("user_id")
-        .populate("subscription_id");
+        .populate("userId")
+        .populate("subscriptionId");
       if (!transactions) {
         return res.status(404).json({ success: false, message: "Transaction not found" });
       }
     } else {
       transactions = await TransactionModel.find()
-        .populate("user_id")
-        .populate("subscription_id")
+        .populate("userId")
+        .populate("subscriptionId")
         .sort({ createdAt: -1 });
     }
 
@@ -33,15 +33,15 @@ const get = async (req, res) => {
 // Add transaction
 const add = async (req, res) => {
   try {
-    const { user_id, subscription_id, amount, status, payment_method, stripe_payment_id } = req.body;
+    const { userId, subscriptionId, amount, status, payment_method, stripe_payment_id } = req.body;
 
-    if (!user_id || !amount) {
+    if (!userId || !amount) {
       return res.status(400).json({ success: false, message: "User ID and amount are required" });
     }
 
     const newTransaction = new TransactionModel({
-      user_id,
-      subscription_id,
+      userId,
+      subscriptionId,
       amount,
       status: status || "success",
       payment_method: payment_method || "stripe",

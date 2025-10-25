@@ -8,17 +8,17 @@ const get = async (req, res) => {
 
     if (subscriptionId) {
       subscriptions = await SubscriptionModel.findById(subscriptionId)
-        .populate("user_id")
-        .populate("plan_id");
+        .populate("userId")
+        .populate("planId");
 
       if (!subscriptions) {
         return res.status(404).json({ success: false, message: "Subscription not found" });
       }
     } else {
       subscriptions = await SubscriptionModel.find()
-        .populate("user_id")
-        .populate("plan_id")
-        .sort({ start_date: -1 });
+        .populate("userId")
+        .populate("planId")
+        .sort({ startDate: -1 });
     }
 
     res.status(200).json({
@@ -34,19 +34,19 @@ const get = async (req, res) => {
 // Add new subscription
 const add = async (req, res) => {
   try {
-    const { user_id, plan_id, start_date, end_date, status, stripe_subscription_id } = req.body;
+    const { userId, planId, startDate, endDate, status, stripeSubscriptionId } = req.body;
 
-    if (!user_id || !plan_id) {
+    if (!userId || !planId) {
       return res.status(400).json({ success: false, message: "User ID and Plan ID are required" });
     }
 
     const newSubscription = new SubscriptionModel({
-      user_id,
-      plan_id,
-      start_date: start_date || Date.now(),
-      end_date,
+      userId,
+      planId,
+      startDate: startDate || Date.now(),
+      endDate,
       status: status || "active",
-      stripe_subscription_id,
+      stripeSubscriptionId,
     });
 
     await newSubscription.save();
