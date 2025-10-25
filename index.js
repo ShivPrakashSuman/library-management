@@ -20,7 +20,7 @@ app.use(
 
 // Mount routes
 app.use("/api/auth", authRoutes);
-app.use("/book", bookRoutes);
+app.use("/api/book", bookRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
