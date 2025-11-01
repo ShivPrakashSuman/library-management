@@ -5,6 +5,7 @@ import { connectDB } from "./config/db.js";
 import authRoutes from './routes/authRoutes.js';
 import bookRoutes from './routes/bookRoutes.js';
 import planRoutes from './routes/planRoutes.js';
+import BorrowRecordRoutes from './routes/borrowRecordRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
 
@@ -25,6 +26,7 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/books", bookRoutes);
 app.use("/api/plans", planRoutes);
+app.use("/api/borrow-record", BorrowRecordRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/transactions", transactionRoutes);
 
